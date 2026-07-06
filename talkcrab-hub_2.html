@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TALKCRAB 总控台</title>
+<style>
+  :root{
+    --red:#C8102E;
+    --red-dark:#8F0B21;
+    --red-light:#FDE9EC;
+    --blue:#1B3A6B;
+    --blue-light:#E8EEF7;
+    --white:#FFFFFF;
+    --bg:#F4F6FA;
+    --text:#1A1D24;
+    --muted:#6B7280;
+    --border:#E2E5EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .app{display:flex;flex-direction:column;height:100vh;}
+
+  /* HEADER / NAV */
+  .topbar{
+    background:var(--blue);color:var(--white);padding:14px 20px;display:flex;
+    justify-content:space-between;align-items:center;flex-shrink:0;
+  }
+  .topbar-title{font-size:16px;font-weight:700;}
+  .tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;}
+  .tab{
+    flex:1;text-align:center;padding:14px 4px;font-size:13px;color:var(--muted);cursor:pointer;
+    border-bottom:3px solid transparent;font-weight:600;
+  }
+  .tab.active{color:var(--red);border-bottom-color:var(--red);}
+  .frame-wrap{flex:1;position:relative;background:var(--white);}
+  .frame-wrap iframe{
+    position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:none;
+  }
+  .frame-wrap iframe.active{display:block;}
+  .frame-fallback{
+    position:absolute;top:0;left:0;width:100%;height:100%;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;
+    background:var(--bg);
+  }
+  .frame-fallback.show{display:flex;}
+  .open-link-btn{
+    background:var(--red);color:var(--white);border:none;padding:12px 22px;border-radius:8px;
+    font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <div id="mainScreen" style="display:flex;flex-direction:column;height:100vh;">
+    <div class="topbar">
+      <div class="topbar-title">TALKCRAB 总控台</div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-target="frame-ops" onclick="showFrame('frame-ops', this)">运营系统<br><span style="font-weight:400;font-size:11px;">Operations</span></div>
+      <div class="tab" data-target="frame-hr" onclick="showFrame('frame-hr', this)">员工 / HR<br><span style="font-weight:400;font-size:11px;">HR Dashboard</span></div>
+      <div class="tab" data-target="frame-biz" onclick="showFrame('frame-biz', this)">营运 Dashboard<br><span style="font-weight:400;font-size:11px;">Business</span></div>
+    </div>
+    <div class="frame-wrap">
+      <iframe id="frame-ops" class="active" src="https://talkcrab-kepong.vercel.app/" onerror="showFallback('frame-ops')"></iframe>
+      <iframe id="frame-hr" src="https://management-system-nu-peach.vercel.app/"></iframe>
+      <iframe id="frame-biz" src="https://kepong-operation.vercel.app/"></iframe>
+
+      <div class="frame-fallback" id="fallback-frame-ops">
+        <p style="font-size:14px;color:var(--muted);max-width:320px;">这个系统不允许被嵌入显示，请点击下方按钮在新分页打开。</p>
+        <a class="open-link-btn" href="https://talkcrab-kepong.vercel.app/" target="_blank">打开 运营系统</a>
+      </div>
+      <div class="frame-fallback" id="fallback-frame-hr">
+        <p style="font-size:14px;color:var(--muted);max-width:320px;">这个系统不允许被嵌入显示，请点击下方按钮在新分页打开。</p>
+        <a class="open-link-btn" href="https://management-system-nu-peach.vercel.app/" target="_blank">打开 员工/HR系统</a>
+      </div>
+      <div class="frame-fallback" id="fallback-frame-biz">
+        <p style="font-size:14px;color:var(--muted);max-width:320px;">这个系统不允许被嵌入显示，请点击下方按钮在新分页打开。</p>
+        <a class="open-link-btn" href="https://kepong-operation.vercel.app/" target="_blank">打开 营运Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showFrame(id, tabEl){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.querySelectorAll('.frame-wrap iframe').forEach(f=>f.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* Detect iframes blocked by X-Frame-Options / CSP frame-ancestors:
+   these fail silently (no 'error' event fires), so we check after a delay
+   whether the iframe's document is reachable; if not, show the fallback link. */
+window.addEventListener('load', ()=>{
+  ['frame-ops','frame-hr','frame-biz'].forEach(id=>{
+    setTimeout(()=>{
+      const frame = document.getElementById(id);
+      try{
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        if(!doc || doc.body.innerHTML.trim() === ''){
+          document.getElementById('fallback-'+id).classList.add('show');
+        }
+      }catch(e){
+        // cross-origin access is expected and fine if the page actually loaded;
+        // errors here don't necessarily mean it's blocked, so we only flag
+        // the case above (same-origin empty body from a refused embed).
+      }
+    }, 2500);
+  });
+});
+
+</script>
+
+</body>
+</html>
